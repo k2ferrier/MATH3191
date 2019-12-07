@@ -1,0 +1,90 @@
+---
+title: "Final_project_lin_alg"
+author: "Kendra Ferrier"
+date: "December 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+moles_2 <- read.csv("https://ucdenver.instructure.com/courses/421765/files/9196715/download?wrap=1")
+
+# Select only the columns needed for analysis, remove individuals with missing data, add a column with the difference between mole counts from 2004 to 2008, and change the name of oca2.status to "genotype", where 0 = gg, 1 = ga, 2 = aa. Gender; 1 = Female, 2 = Male.
+moles_3 <- moles_2 %>% 
+  select(oca2.status, gender, eyecolor, haircolor, baseskincolor, hispanic, molecount2008, number.vacs..birth.thru.2007) %>% 
+  drop_na() %>% 
+  rename("genotype" = oca2.status) %>% 
+  rename("n_vacations" = number.vacs..birth.thru.2007) %>% 
+  rename("mole_count" = molecount2008) %>% 
+  select(genotype, gender, eyecolor, haircolor, baseskincolor, hispanic, n_vacations)
+
+moles_4 <- moles_2 %>% 
+  select(oca2.status, gender, eyecolor, haircolor, baseskincolor, hispanic, molecount2008, number.vacs..birth.thru.2007) %>% 
+  drop_na() %>% 
+  rename("genotype" = oca2.status) %>% 
+  rename("n_vacations" = number.vacs..birth.thru.2007) %>% 
+  rename("mole_count" = molecount2008) %>% 
+  select(genotype, gender, hispanic, n_vacations)  
+
+# full data 
+pca <- princomp(moles_3, cor = T)
+extract_pcs <- fviz_eig(pca)
+extract_pcs
+
+get_pca_var(pca)$coord # Coordinates
+get_pca_var(pca)$contrib # Contributions of PCs
+get_pca_var(pca)$cos2 #Quality of representation
+groups <- as.factor(moles_3$genotype)
+fviz_pca_biplot(pca, 
+             col.ind = groups,
+             col.var = "black",
+             addEllipses = T,
+             palette = "dark2",
+             label = "var"
+             )
+
+# subsetted data 
+pca_2 <- princomp(moles_4, cor = T)
+extract_pcs_2 <- fviz_eig(pca_2)
+extract_pcs_2
+
+get_pca_var(pca_2)$coord # Coordinates
+get_pca_var(pca_2)$contrib # Contributions of PCs
+get_pca_var(pca_2)$cos2 #Quality of representation
+groups_2 <- as.factor(moles_4$genotype)
+fviz_pca_biplot(pca_2, 
+             col.ind = groups_2,
+             col.var = "black",
+             addEllipses = T,
+             palette = "dark2",
+             label = "var"
+             )
+ 
+# Other PCA biplots for full data
+fviz_pca_biplot(pca_2,
+                axes = c(2,3),
+                col.ind = as.factor(moles_4$hispanic),
+                col.var = "black",
+                addEllipses = T,
+                palette = "dark2"
+                )
+
+fviz_pca_biplot(pca,
+                axes = c(3,4),
+                col.ind = as.factor(moles$gender),
+                col.var = "black",
+                addEllipses = T,
+                palette = "dark2"
+                )
+
+fviz_pca_biplot(pca,
+                axes = c(4,5),
+                col.ind = as.factor(moles$hispanic),
+                col.var = "black",
+                addEllipses = T,
+                palette = "dark2"
+                )
+```
