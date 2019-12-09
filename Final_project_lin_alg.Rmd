@@ -63,7 +63,7 @@ moles_2 <- moles %>%
   rename("mole_count" = molecount2008)
 
 # Perform PCR
-pcr <- pcr(data = moles_2, mole_count~., scale = T) # create a PCR object. The response variable being modeled is mole count as described by all other variables. The variables are scaled according to their variance. 
+pcr <- pcr(data = moles_2, mole_count~., scale = T, validation = "CV") # create a PCR object. The response variable being modeled is mole count as described by all other variables. The variables are scaled according to their variance. 
 summary(pcr)
 
 # Plot of root mean squared error as a function of number of PCs included.
@@ -73,34 +73,28 @@ plot(RMSEP(pcr), main = "Mole Count PCR Scree Plot")
 plot(pcr, ncomp = 5, line = T, main = "PC Regression (n=5) on Mole Count", ylab = "residuals", xlab = "mole count")
 
 # Estimated coefficients (Betas) for each variable in the model based on 5 PCs
-coef(pcr, comps = 5)
+coef(pcr)
+
+explvar(pcr)
+pcr$loadings
 ```
 
-
-
+Partial Least Squares (PLS):
 ```{r}
-# Reduced Model
-moles_4 <- moles %>% 
-  select(oca2.status, gender, eyecolor, haircolor, baseskincolor, hispanic, molecount2008, number.vacs..birth.thru.2007) %>% 
-  drop_na() %>% 
-  rename("genotype" = oca2.status) %>% 
-  rename("n_vacations" = number.vacs..birth.thru.2007) %>% 
-  rename("mole_count" = molecount2008) %>% 
-  select(mole_count, genotype, gender, hispanic, n_vacations) 
+# Run a partial least squares regression on the moles data using the same data as for the PCR analysis.
+pls <- plsr(data = moles_2, mole_count~. , validation = "LOO")
+summary(pls)
+plot(RMSEP(pls))
+coef(pls, comps = 5)
+explvar(pls)
+pls$loadings
 
-pca_2 <- princomp(moles_4, cor = T)
-extract_pcs_2 <- fviz_eig(pca_2)
-extract_pcs_2
+```
 
-get_pca_var(pca_2)$coord # Coordinates
-get_pca_var(pca_2)$contrib # Contributions of PCs
-get_pca_var(pca_2)$cos2 #Quality of representation
-groups_2 <- as.factor(moles_4$genotype)
-fviz_pca_biplot(pca_2, 
-             col.ind = groups_2,
-             col.var = "black",
-             addEllipses = T,
-             palette = "dark2",
-             label = "var"
-             )
+Multivariate Linear Regression
+```{r}
+# Regression
+mlr <- lm(data = moles_2, formula = mole_count ~ genotype + gender + hispanic + n_vacations + eyecolor + haircolor + baseskincolor)
+summary(mlr)
+
 ```
