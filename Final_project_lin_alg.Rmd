@@ -45,6 +45,7 @@ fviz_pca_biplot(pca,
              palette = "dark2",
              label = "var"
              )
+
 ```
 
 
@@ -72,11 +73,11 @@ plot(RMSEP(pcr), main = "Mole Count PCR Scree Plot")
 # Plot of the linear regression using 5 PCs on mole count.
 plot(pcr, ncomp = 5, line = T, main = "PC Regression (n=5) on Mole Count", ylab = "residuals", xlab = "mole count")
 
-# Estimated coefficients (Betas) for each variable in the model based on 5 PCs
-coef(pcr)
-
+# Percent Variance explained by each PC in table format
 explvar(pcr)
-pcr$loadings
+
+# Estimated coefficients (Betas) for each variable in the model
+coef(pcr)
 ```
 
 Partial Least Squares (PLS):
@@ -84,17 +85,20 @@ Partial Least Squares (PLS):
 # Run a partial least squares regression on the moles data using the same data as for the PCR analysis.
 pls <- plsr(data = moles_2, mole_count~. , validation = "LOO")
 summary(pls)
-plot(RMSEP(pls))
-coef(pls, comps = 5)
-explvar(pls)
-pls$loadings
 
+# Plot of root mean squared error as a function of number of PCs included.
+plot(RMSEP(pls), main = "Mole Count PLS Scree Plot")
+
+# Percent Variance explained by each PC in table format
+explvar(pls)
+
+# Estimated coefficients (Betas) for each variable in the model
+coef(pls)
 ```
 
 Multivariate Linear Regression
 ```{r}
-# Regression
+# Oridinary Least Squares Regression of Mole count as explained by genotype, gender, ethnicity (hispanic), number of vacations, eye color, hair color, and base skin color
 mlr <- lm(data = moles_2, formula = mole_count ~ genotype + gender + hispanic + n_vacations + eyecolor + haircolor + baseskincolor)
 summary(mlr)
-
 ```
