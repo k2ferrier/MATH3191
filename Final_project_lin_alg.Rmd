@@ -64,39 +64,38 @@ moles_2 <- moles %>%
   rename("mole_count" = molecount2008)
 
 # Perform PCR
+set.seed(346)
 pcr <- pcr(data = moles_2, mole_count~., scale = T, validation = "CV") # create a PCR object. The response variable being modeled is mole count as described by all other variables. The variables are scaled according to their variance. 
 summary(pcr)
 
 # Plot of root mean squared error as a function of number of PCs included.
 plot(RMSEP(pcr), main = "Mole Count PCR Scree Plot")
 
-# Plot of the linear regression
-plot(pcr, line = T, main = "PCA Regression on Mole Count", ylab = "residuals", xlab = "mole count")
+# Plot of the linear regression using all PCs.
+plot(pcr, line = T, main = "PCA Regression on Mole Count", xlab = "mole count")
 
-# Percent Variance explained by each PC in table format
-explvar(pcr)
-
-# Estimated coefficients (Betas) for each variable in the model
+# Estimated coefficients (Betas) for each variable in the model using all PCs.
 coef(pcr)
 ```
 
 Partial Least Squares (PLS):
 ```{r}
 # Run a partial least squares regression on the moles data using the same data as for the PCR analysis.
+set.seed(346)
 pls <- plsr(data = moles_2, mole_count~. , validation = "LOO")
 summary(pls)
 
 # Plot of root mean squared error as a function of number of PCs included.
 plot(RMSEP(pls), main = "Mole Count PLS Scree Plot")
 
-# Percent Variance explained by each PC in table format
-explvar(pls)
+# Plot of the linear regression using all PCs.
+plot(pls, line = T, main = "PLS Regression on Mole Count", xlab = "mole count")
 
-# Estimated coefficients (Betas) for each variable in the model
+# Estimated coefficients (Betas) for each variable in the model using all PCs.
 coef(pls)
 ```
 
-Multivariate Linear Regression
+Multivariate Linear Regression:
 ```{r}
 # Oridinary Least Squares Regression of Mole count as explained by genotype, gender, ethnicity (hispanic), number of vacations, eye color, hair color, and base skin color
 mlr <- lm(data = moles_2, formula = mole_count ~ genotype + gender + hispanic + n_vacations + eyecolor + haircolor + baseskincolor)
