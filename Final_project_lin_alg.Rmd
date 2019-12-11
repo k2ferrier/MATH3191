@@ -12,6 +12,7 @@ library(tidyr)
 library(factoextra)
 library(car)
 library(pls)
+library(sjPlot)
 ```
 Import Data:
 ```{r}
@@ -33,7 +34,7 @@ moles_3 <- moles %>%
 pca <- princomp(moles_3, cor = T) # The correlation matrix is used to perform the PCA. This is equivalent to standardizing each variable to mean 0 and standard deviation of 1, which helps account for the difference in scales between variables.
 
 # Create a scree plot to view the variance explained as a function of number of PCs.
-scree_plot <- fviz_eig(pca)
+scree_plot <- fviz_eig(pca, main = "PCA Scree Plot")
 scree_plot
 
 # Plot the PC scores of each individual vs loadings of variables for PCs 1 and 2.
@@ -72,7 +73,7 @@ summary(pcr)
 plot(RMSEP(pcr), main = "Mole Count PCR Scree Plot")
 
 # Plot of the linear regression using all PCs.
-plot(pcr, line = T, main = "PCA Regression on Mole Count", xlab = "mole count")
+plot(pcr, line = T, main = "PC Regression on Mole Count", xlab = "mole count")
 
 # Estimated coefficients (Betas) for each variable in the model using all PCs.
 coef(pcr)
@@ -98,6 +99,67 @@ coef(pls)
 Multivariate Linear Regression:
 ```{r}
 # Oridinary Least Squares Regression of Mole count as explained by genotype, gender, ethnicity (hispanic), number of vacations, eye color, hair color, and base skin color
-mlr <- lm(data = moles_2, formula = mole_count ~ genotype + gender + hispanic + n_vacations + eyecolor + haircolor + baseskincolor)
+mlr <- lm(data = moles_2, formula = mole_count ~ genotype + gender + eyecolor + haircolor + baseskincolor + hispanic + n_vacations)
 summary(mlr)
 ```
+
+Table 1:
+```{r}
+# Create a summary table of the moles cohort
+moles_summary <- moles_3 %>% 
+  select(genotype, eyecolor, haircolor, gender, baseskincolor, hispanic, n_vacations, mole_count) %>%  # select only the rows needed for presenting
+  mutate(gender = case_when(
+    gender == 1 ~ "F",
+    gender == 2 ~ "M"
+  )) %>%  # switch the dummy variables for more descriptive names
+  mutate(hispanic = case_when(
+    hispanic == 1 ~ "Y",
+    hispanic == 0 ~ "N"
+  )) %>% # switch the dummy variables for more descriptive names
+  mutate(genotype = case_when(
+    genotype == 0 ~ "gg",
+    genotype == 1 ~ "ga",
+    genotype == 2 ~ "aa"
+  )) %>% # switch the dummy variables for more descriptive names
+  group_by(genotype, hispanic, gender) %>% # create groups for each unique combination of categorical variables
+  summarize(
+    n = n(),
+    "eye color: BG" = sum(eyecolor == 1),
+    "eye color: Br" = sum(eyecolor == 2),
+    "eye color: H" = sum(eyecolor == 3),
+    "hair color: B" = sum(haircolor == 1),
+    "hair color: R" = sum(haircolor == 2),
+    "hair color: Br"= sum(haircolor == 3),
+    "hair color: Bl"= sum(haircolor == 4),
+    "mean base skin color" = mean(baseskincolor),
+    #"sd base skin color" = sd(baseskincolor),
+    "mean vacations" = mean(n_vacations), # calculate the mean number of vacations for each group
+    #"sd vacations" = sd(n_vacations), # calculate the sd of vacations for each group
+    "mean mole count" = mean(mole_count) # calculate the mean number of difference in moles for each group
+    #"sd mole count" = sd(mole_count) # calculate the sd of difference in moles for each group
+    ) 
+  
+
+# print the summary table in a publishing ready format
+tab_df(moles_summary, title = "Summary of Moles Cohort", alternate.rows = T,
+       file = "Moles_Summary_tbl.html")
+```
+
+Estimated Coefficients Summary Table:
+```{r}
+pls_coef <- coef(pls)
+pcr_coef <- coef(pcr)
+mlr_coef <- summary(mlr)$coefficients[2:9,1]
+
+coef_sum_table <- data.frame("Variable" = c("genotype ga", "genotype gg", "gender", "eye color", "hair color", "base skin color", "hispanic", "n_vacations" ), "PCR" = pcr_coef, "PLS" = pls_coef, "OLS" = mlr_coef)
+
+coef_sum_table <- coef_sum_table %>% 
+  select(Variable, mole_count.8.comps, mole_count.8.comps.1, OLS) %>%
+  mutate(Variable = c("genotype ga", "genotype gg", "gender", "eye color", "hair color", "base skin color", "hispanic", "n vacations")) %>% 
+  rename("PCR" = mole_count.8.comps) %>% 
+  rename("PLS" = mole_count.8.comps.1)
+
+tab_df(coef_sum_table, title = "Summary of Estimated Coefficient", alternate.rows = T,
+       file = "coef_est_tbl.html")
+```
+
