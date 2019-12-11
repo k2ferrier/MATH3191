@@ -70,8 +70,8 @@ summary(pcr)
 # Plot of root mean squared error as a function of number of PCs included.
 plot(RMSEP(pcr), main = "Mole Count PCR Scree Plot")
 
-# Plot of the linear regression using 5 PCs on mole count.
-plot(pcr, ncomp = 5, line = T, main = "PC Regression (n=5) on Mole Count", ylab = "residuals", xlab = "mole count")
+# Plot of the linear regression
+plot(pcr, line = T, main = "PCA Regression on Mole Count", ylab = "residuals", xlab = "mole count")
 
 # Percent Variance explained by each PC in table format
 explvar(pcr)
